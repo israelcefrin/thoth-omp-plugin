@@ -62,10 +62,15 @@ class PublicationFormatFormHandlerTest extends PKPTestCase
         $this->assertSame(
             [
                 'pub-id::publisher-id',
-                'accessibilityStandard',
-                'accessibilityAdditionalStandard',
+                'accessibilityApplicable',
                 'accessibilityException',
+                'accessibilityStandards',
                 'accessibilityReportUrl',
+                'hasAltTextAllImages',
+                'pdfIsTagged',
+                'accessibilityComplianceLevel',
+                'accessibilityStatementPresent',
+                'knownLimitations',
             ],
             $fieldNames
         );

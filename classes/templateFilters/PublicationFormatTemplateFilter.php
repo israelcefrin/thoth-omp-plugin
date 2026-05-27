@@ -39,7 +39,7 @@ class PublicationFormatTemplateFilter
     {
         if (
             strpos($output, self::FORMAT_FORM_ID) === false
-            || strpos($output, 'id="accessibilityStandard"') !== false
+            || strpos($output, 'id="accessibilityApplicable"') !== false
         ) {
             return $output;
         }

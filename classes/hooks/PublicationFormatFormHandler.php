@@ -23,10 +23,15 @@ use PKP\plugins\GenericPlugin;
 class PublicationFormatFormHandler
 {
     public const ACCESSIBILITY_FIELDS = [
-        'accessibilityStandard',
-        'accessibilityAdditionalStandard',
+        'accessibilityApplicable',
         'accessibilityException',
+        'accessibilityStandards',
         'accessibilityReportUrl',
+        'hasAltTextAllImages',
+        'pdfIsTagged',
+        'accessibilityComplianceLevel',
+        'accessibilityStatementPresent',
+        'knownLimitations',
     ];
 
     private GenericPlugin $plugin;
@@ -44,13 +49,22 @@ class PublicationFormatFormHandler
 
         foreach (self::ACCESSIBILITY_FIELDS as $fieldName) {
             if ($publicationFormat && $form->getData($fieldName) === null) {
-                $form->setData($fieldName, $publicationFormat->getData($fieldName));
+                $value = $publicationFormat->getData($fieldName);
+                if ($fieldName === 'accessibilityStandards') {
+                    $value = $this->normalizeStandardsForForm($value);
+                } elseif (in_array($fieldName, $this->getBooleanFieldNames(), true)) {
+                    $value = $this->normalizeBooleanValue($value);
+                }
+
+                $form->setData($fieldName, $value);
             }
         }
 
         $templateMgr->assign([
-            'thothAccessibilityStandardOptions' => $this->getAccessibilityStandardOptions(),
+            'thothAccessibilityApplicabilityOptions' => $this->getAccessibilityApplicabilityOptions(),
             'thothAccessibilityExceptionOptions' => $this->getAccessibilityExceptionOptions(),
+            'thothAccessibilityStandardOptions' => $this->getAccessibilityStandardOptions(),
+            'thothAccessibilityComplianceLevelOptions' => $this->getAccessibilityComplianceLevelOptions(),
         ]);
 
         (new PublicationFormatTemplateFilter($this->plugin))->register($templateMgr);
@@ -98,10 +112,23 @@ class PublicationFormatFormHandler
         }
 
         foreach (self::ACCESSIBILITY_FIELDS as $fieldName) {
-            $publicationFormat->setData($fieldName, $this->normalizeOptionalValue($form->getData($fieldName)));
+            $publicationFormat->setData($fieldName, $this->normalizeFieldValue($fieldName, $form->getData($fieldName)));
         }
 
         return false;
+    }
+
+    private function normalizeFieldValue(string $fieldName, $value)
+    {
+        if ($fieldName === 'accessibilityStandards') {
+            return $this->normalizeStandardsForStorage($value);
+        }
+
+        if (in_array($fieldName, $this->getBooleanFieldNames(), true)) {
+            return $this->normalizeBooleanValue($value);
+        }
+
+        return $this->normalizeOptionalValue($value);
     }
 
     private function normalizeOptionalValue($value): ?string
@@ -110,30 +137,95 @@ class PublicationFormatFormHandler
         return $value === '' ? null : $value;
     }
 
+    private function normalizeBooleanValue($value): ?bool
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
+    private function normalizeStandardsForForm($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        if (is_string($value)) {
+            $decodedValue = json_decode($value, true);
+            if (is_array($decodedValue)) {
+                return $decodedValue;
+            }
+        }
+
+        return [];
+    }
+
+    private function normalizeStandardsForStorage($value): ?string
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $value = array_values(array_filter(array_map('trim', $value), fn ($standard) => $standard !== ''));
+        if ($value === []) {
+            return null;
+        }
+
+        return json_encode($value);
+    }
+
+    private function getBooleanFieldNames(): array
+    {
+        return [
+            'accessibilityApplicable',
+            'hasAltTextAllImages',
+            'pdfIsTagged',
+            'accessibilityStatementPresent',
+        ];
+    }
+
+    private function getAccessibilityApplicabilityOptions(): array
+    {
+        return [
+            '1' => 'Applicable',
+            '0' => 'Not applicable',
+        ];
+    }
+
     private function getAccessibilityStandardOptions(): array
     {
         return [
-            '' => 'common.none',
-            'WCAG21AA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag21aa',
-            'WCAG21AAA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag21aaa',
-            'WCAG22AA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag22aa',
-            'WCAG22AAA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.wcag22aaa',
-            'EPUB_A11Y10AA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aa',
-            'EPUB_A11Y10AAA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y10aaa',
-            'EPUB_A11Y11AA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aa',
-            'EPUB_A11Y11AAA' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.epubA11y11aaa',
-            'PDF_UA1' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa1',
-            'PDF_UA2' => 'plugins.generic.thoth.publicationFormat.accessibilityStandard.pdfUa2',
+            'wcag-2.1-AA' => 'WCAG 2.1 AA',
+            'wcag-2.2-AA' => 'WCAG 2.2 AA',
+            'pdfua-1' => 'PDF/UA-1',
+            'pdfua-2' => 'PDF/UA-2',
         ];
     }
 
     private function getAccessibilityExceptionOptions(): array
     {
         return [
-            '' => 'common.none',
-            'MICRO_ENTERPRISES' => 'plugins.generic.thoth.publicationFormat.accessibilityException.microEnterprises',
-            'DISPROPORTIONATE_BURDEN' => 'plugins.generic.thoth.publicationFormat.accessibilityException.disproportionateBurden',
-            'FUNDAMENTAL_ALTERATION' => 'plugins.generic.thoth.publicationFormat.accessibilityException.fundamentalAlteration',
+            '' => 'None',
+            'small' => 'Small publisher exemption',
+            'legacy' => 'Legacy content',
+            'other' => 'Other',
+        ];
+    }
+
+    private function getAccessibilityComplianceLevelOptions(): array
+    {
+        return [
+            '' => 'None',
+            'wcag-2.0-A' => 'WCAG 2.0 A',
+            'wcag-2.0-AA' => 'WCAG 2.0 AA',
+            'wcag-2.1-AA' => 'WCAG 2.1 AA',
+            'wcag-2.2-AA' => 'WCAG 2.2 AA',
         ];
     }
 }
