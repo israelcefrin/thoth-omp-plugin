@@ -172,12 +172,15 @@ class PublicationFormatFormHandler
             return null;
         }
 
-        $value = array_values(array_filter(array_map('trim', $value), fn ($standard) => $standard !== ''));
-        if ($value === []) {
+        $trimmedValues = array_map('trim', $value);
+        $filteredValues = array_filter($trimmedValues, fn ($standard) => $standard !== '');
+        $normalizedValues = array_values($filteredValues);
+
+        if ($normalizedValues === []) {
             return null;
         }
 
-        return json_encode($value);
+        return json_encode($normalizedValues);
     }
 
     private function getBooleanFieldNames(): array
