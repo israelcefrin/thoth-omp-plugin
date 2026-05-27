@@ -51,7 +51,7 @@ class PublicationFormatTemplateFilterTest extends PKPTestCase
                 $this->smarty = new class () {
                     public function fetch($template)
                     {
-                        return '<div id="accessibilityStandard">Accessibility</div>';
+                        return '<div id="accessibilityApplicable">Accessibility</div>';
                     }
                 };
             }
@@ -60,10 +60,10 @@ class PublicationFormatTemplateFilterTest extends PKPTestCase
 
         $filteredOutput = $filter->injectAccessibilityFields($output, $template);
 
-        $this->assertStringContainsString('id="accessibilityStandard"', $filteredOutput);
+        $this->assertStringContainsString('id="accessibilityApplicable"', $filteredOutput);
         $this->assertGreaterThan(
             strpos($filteredOutput, '</fieldset>'),
-            strpos($filteredOutput, 'id="accessibilityStandard"')
+            strpos($filteredOutput, 'id="accessibilityApplicable"')
         );
     }
 }

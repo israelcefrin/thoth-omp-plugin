@@ -30,8 +30,13 @@
 			</div>
 		</div>
 	</div>
-	{fbvElement type="select" id="accessibilityStandard" label="plugins.generic.thoth.publicationFormat.accessibilityStandard" from=$thothAccessibilityStandardOptions selected=$accessibilityStandard size=$fbvStyles.size.MEDIUM inline=true}
-	{fbvElement type="select" id="accessibilityAdditionalStandard" label="plugins.generic.thoth.publicationFormat.accessibilityAdditionalStandard" from=$thothAccessibilityStandardOptions selected=$accessibilityAdditionalStandard size=$fbvStyles.size.MEDIUM inline=true}
+	{fbvElement type="select" id="accessibilityApplicable" label="Accessibility applicability" from=$thothAccessibilityApplicabilityOptions selected=$accessibilityApplicable size=$fbvStyles.size.MEDIUM inline=true}
 	{fbvElement type="select" id="accessibilityException" label="plugins.generic.thoth.publicationFormat.accessibilityException" from=$thothAccessibilityExceptionOptions selected=$accessibilityException size=$fbvStyles.size.MEDIUM inline=true}
+	{fbvElement type="select" id="accessibilityStandards[]" label="Accessibility standards" from=$thothAccessibilityStandardOptions selected=$accessibilityStandards size=$fbvStyles.size.MEDIUM inline=true multiple=true}
 	{fbvElement type="text" id="accessibilityReportUrl" label="plugins.generic.thoth.publicationFormat.accessibilityReportUrl" value=$accessibilityReportUrl size=$fbvStyles.size.MEDIUM inline=true}
+	{fbvElement type="checkbox" id="hasAltTextAllImages" label="All images have alternative text" checked=$hasAltTextAllImages}
+	{fbvElement type="checkbox" id="pdfIsTagged" label="PDF is tagged" checked=$pdfIsTagged}
+	{fbvElement type="select" id="accessibilityComplianceLevel" label="Compliance level" from=$thothAccessibilityComplianceLevelOptions selected=$accessibilityComplianceLevel size=$fbvStyles.size.MEDIUM inline=true}
+	{fbvElement type="checkbox" id="accessibilityStatementPresent" label="Accessibility statement is present" checked=$accessibilityStatementPresent}
+	{fbvElement type="textarea" id="knownLimitations" label="Known limitations" value=$knownLimitations multiline=true}
 {/fbvFormSection}

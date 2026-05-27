@@ -136,22 +136,35 @@ class ThothPublicationFactoryTest extends PKPTestCase
     public function testCreateThothPublicationFromPublicationFormatAccessibilityMetadata()
     {
         $this->setUpMockEnvironment('DA', 'PDF', null, [
-            'accessibilityStandard' => 'WCAG21AA',
-            'accessibilityAdditionalStandard' => 'PDF_UA1',
-            'accessibilityException' => 'MICRO_ENTERPRISES',
+            'accessibilityApplicable' => true,
+            'accessibilityException' => 'small',
+            'accessibilityStandards' => json_encode(['wcag-2.1-AA', 'pdfua-1']),
             'accessibilityReportUrl' => 'https://example.com/accessibility-report',
+            'hasAltTextAllImages' => true,
+            'pdfIsTagged' => false,
+            'accessibilityComplianceLevel' => 'wcag-2.2-AA',
+            'accessibilityStatementPresent' => true,
+            'knownLimitations' => 'Some scanned legacy pages are not fully tagged.',
         ]);
         $mockPubFormat = $this->mocks['publicationFormat'];
 
         $factory = new ThothPublicationFactory();
         $thothPublication = $factory->createFromPublicationFormat($mockPubFormat);
 
-        $this->assertSame('WCAG21AA', $thothPublication->getData('accessibilityStandard'));
-        $this->assertSame('PDF_UA1', $thothPublication->getData('accessibilityAdditionalStandard'));
-        $this->assertSame('MICRO_ENTERPRISES', $thothPublication->getData('accessibilityException'));
+        $this->assertTrue($thothPublication->getData('accessibilityApplicable'));
+        $this->assertSame('small', $thothPublication->getData('accessibilityException'));
+        $this->assertSame(['wcag-2.1-AA', 'pdfua-1'], $thothPublication->getData('accessibilityStandards'));
         $this->assertSame(
             'https://example.com/accessibility-report',
             $thothPublication->getData('accessibilityReportUrl')
+        );
+        $this->assertTrue($thothPublication->getData('hasAltTextAllImages'));
+        $this->assertFalse($thothPublication->getData('pdfIsTagged'));
+        $this->assertSame('wcag-2.2-AA', $thothPublication->getData('accessibilityComplianceLevel'));
+        $this->assertTrue($thothPublication->getData('accessibilityStatementPresent'));
+        $this->assertSame(
+            'Some scanned legacy pages are not fully tagged.',
+            $thothPublication->getData('knownLimitations')
         );
     }
 }

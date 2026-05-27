@@ -21,10 +21,15 @@ use ThothApi\GraphQL\Models\Publication as ThothPublication;
 class ThothPublicationFactory
 {
     private const ACCESSIBILITY_FIELDS = [
-        'accessibilityStandard',
-        'accessibilityAdditionalStandard',
+        'accessibilityApplicable',
         'accessibilityException',
+        'accessibilityStandards',
         'accessibilityReportUrl',
+        'hasAltTextAllImages',
+        'pdfIsTagged',
+        'accessibilityComplianceLevel',
+        'accessibilityStatementPresent',
+        'knownLimitations',
     ];
 
     private const PHYSICAL_PUBLICATION_TYPE_MAPPING = [
@@ -89,7 +94,7 @@ class ThothPublicationFactory
         ];
 
         foreach (self::ACCESSIBILITY_FIELDS as $fieldName) {
-            $fieldValue = $publicationFormat->getData($fieldName);
+            $fieldValue = $this->normalizeAccessibilityFieldValue($fieldName, $publicationFormat->getData($fieldName));
             if ($fieldValue !== null && $fieldValue !== '') {
                 $publicationData[$fieldName] = $fieldValue;
             }
@@ -233,5 +238,36 @@ class ThothPublicationFactory
         }
 
         return null;
+    }
+
+    private function normalizeAccessibilityFieldValue(string $fieldName, $value)
+    {
+        if ($fieldName === 'accessibilityStandards') {
+            if (is_array($value)) {
+                return $value;
+            }
+
+            if (!is_string($value) || $value === '') {
+                return null;
+            }
+
+            $decodedValue = json_decode($value, true);
+            return is_array($decodedValue) ? $decodedValue : null;
+        }
+
+        if (in_array($fieldName, [
+            'accessibilityApplicable',
+            'hasAltTextAllImages',
+            'pdfIsTagged',
+            'accessibilityStatementPresent',
+        ], true)) {
+            if ($value === null || $value === '') {
+                return null;
+            }
+
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+
+        return $value;
     }
 }
